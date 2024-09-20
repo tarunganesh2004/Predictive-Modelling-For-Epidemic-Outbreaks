@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotspot Predictor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 1000px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Hotspot Predictor</h1>
+    <form id="predict-form">
+        <label for="region">Enter Region/Country Name:</label>
+        <input type="text" id="region" name="region" required>
+        <br>
+        <button type="submit">Predict Hotspot</button>
+    </form>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([2,2], 3);  // Initialize the map
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        document.getElementById('predict-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const region = document.getElementById('region').value;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ region: region })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    // Clear previous markers
+                    map.eachLayer(layer => {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    // Add new markers
+                    data.forEach(hotspot => {
+                        L.marker([hotspot.Lat, hotspot.Long], {
+                            icon: L.icon({
+                                iconUrl: 'placeholder.png',  // Replace with your icon URL
+                                iconSize: [25, 41],  // Size of the icon
+                                iconAnchor: [12, 41],  // Anchor point of the icon
+                            })
+                        }).addTo(map)
+                            .bindPopup(`<b>${hotspot["Country/Region"]}</b>`)
+                            .openPopup();
+                    });
+
+                    if (data.length === 0) {
+                        alert('No hotspots found for this region.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+</body>
+
+</html>
