@@ -10,7 +10,7 @@ knn_model = joblib.load("knn_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
 # Load the dataset
-merged_df_with_population = pd.read_csv("merged_df_population.csv", low_memory=False)
+merged_df_with_population = pd.read_csv("merged_df_population_hotspots.csv", low_memory=False)
 
 
 @app.route("/")
